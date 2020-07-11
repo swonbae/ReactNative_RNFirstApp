@@ -1,51 +1,48 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
-import { StyleSheet, View, FlatList, Button } from "react-native";
-import GoalItem from "./components/GoalItem";
-import GoalInput from "./components/GoalInput";
+import { StyleSheet, View } from "react-native";
+
+import Header from "./components/Header";
+import StartGameScreen from "./screens/StartGameScreen";
+import GameScreen from "./screens/GameScreen";
+import GameOverScreen from "./screens/GameOverScreen";
 
 export default function App() {
-  const [courseGoals, setCourseGoals] = useState([]);
-  const [isAddMode, setIsAddMode] = useState(false);
+  const [userNumber, setUserNumber] = useState();
+  const [guessRounds, setGuessRounds] = useState(0);
 
-  const addGoalHandler = (goalTitle) => {
-    if (goalTitle.length === 0) {
-      return;
-    }
+  const configureNewGameHandler = () => {
+    setGuessRounds(0);
+    setUserNumber(null);
+  };
+  const startGameHandler = (selectedNumber) => {
+    setUserNumber(selectedNumber);
+    setGuessRounds(0);
+  };
+  const gameOverHandler = (numOfRounds) => {
+    setGuessRounds(numOfRounds);
+  };
 
-    setCourseGoals([
-      ...courseGoals,
-      { id: Math.random().toString(), value: goalTitle },
-    ]);
-    setIsAddMode(false);
-  };
-  const removeGoalHandler = (goalId) => {
-    console.log("to be deleted: " + goalId);
-    setCourseGoals(courseGoals.filter((goal) => goal.id != goalId));
-  };
-  const closeModalHandler = () => {
-    setIsAddMode(false);
-  };
+  let content = <StartGameScreen onStartGame={startGameHandler} />;
+
+  if (userNumber && guessRounds <= 0) {
+    content = (
+      <GameScreen userChoice={userNumber} onGameOver={gameOverHandler} />
+    );
+  } else if (guessRounds > 0) {
+    content = (
+      <GameOverScreen
+        roundsNumber={guessRounds}
+        userNumber={userNumber}
+        onRestart={configureNewGameHandler}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Button title="Add New Goal" onPress={() => setIsAddMode(true)} />
-      <GoalInput
-        visible={isAddMode}
-        onAddGoal={addGoalHandler}
-        onCancel={closeModalHandler}
-      />
-      <FlatList
-        keyExtractor={(item, index) => item.id}
-        data={courseGoals}
-        renderItem={(itemData) => (
-          <GoalItem
-            onDelete={() => removeGoalHandler(itemData.item.id)}
-            title={itemData.item.value}
-          />
-        )}
-      />
-
+      <Header title="Guess a Number" />
+      {content}
       {/* <StatusBar style="auto" /> */}
     </View>
   );
@@ -53,10 +50,10 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
+    flex: 1,
     // backgroundColor: "#fff",
     // alignItems: "center",
     // justifyContent: "center",
-    padding: 50,
+    // padding: 50,
   },
 });
